@@ -4,7 +4,7 @@ resource "aws_instance" "tfwebserver" {
     instance_type = "t2.micro"
     tags = {
         Name = "TFcreated"
-        env = "Test"
+        env = "Prod"
     }
   
 }
