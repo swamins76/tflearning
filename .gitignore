@@ -1,2 +1,9 @@
-*.exe
-C:\Users\swami\OneDrive\01-coderepo\awsterraform\tflearning\Scripts\.terraform\providers
+**/.terraform
+**/*.terraform
+**/terraform.tfstate*
+**/secrets.auto.tfvars
+**/plan.out
+**/.terraform.tfstate*
+**/backend.tf
+webpage-s3-lambda/site/index.html
+.vscode/*
