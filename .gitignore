@@ -5,5 +5,6 @@
 **/plan.out
 **/.terraform.tfstate*
 **/backend.tf
-webpage-s3-lambda/site/index.html
 .vscode/*
+/shelf/
+/workspace.xml
