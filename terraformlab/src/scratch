@@ -33,3 +33,5 @@ resource "aws_security_group" "tf-security-group" {
      public_key = file("~/testec2.pub")
 
  }
+
+ 
