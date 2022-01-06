@@ -1,4 +1,20 @@
 //aws compute configuraiton
+/*
+resource "aws_autoscaling_group" "tfasg" {
+  provider = aws.east
+  name = "tf-asg"
+  max_size = 4
+  min_size = 2
+  launch_configuration = aws_launch_configuration.tf-launch-config.name
+  vpc_zone_identifier = [aws_subnet.web1.id,aws_subnet.web2.id]
+  #target_group_arns = [aws_lb_target_group.pool.arn]
+
+  tag {
+    key = "Name"
+    propagate_at_launch = true
+    value = "tf-ec2VM"
+  }
+}
 
 resource "aws_launch_configuration" "tf-launch-config" {
   provider = aws.east
@@ -10,59 +26,75 @@ resource "aws_launch_configuration" "tf-launch-config" {
   #key_name = ""
   user_data = var.user_data
   }
-
- resource "aws_vpc" "tfvpc" {
-   provider = aws.east
-  cidr_block = "172.20.0.0/16"
+*/
+//terraformlab\src\Modules\vpc
+module "vpc" {
+  source = "./Modules/vpc"
 }
-resource "aws_subnet" "web1" {
-  provider = aws.east
-      cidr_block = "172.20.10.0/24"
-  vpc_id = aws_vpc.tfvpc.id
-  availability_zone = var.az[0]
-
+resource "aws_instance" "tf-instance-name" {
+  provider                    = aws.east
+  ami                         = var.aws_image
+  instance_type               = var.instance_type[0]
+  subnet_id                   = module.vpc.subnet_id_web1
+  security_groups             = [aws_security_group.awsfw.id]
+  associate_public_ip_address = true
+  #key_name = ""
+  user_data = var.user_data
   tags = {
-    name = "web1"
+    Name = "webserver-terraform"
   }
 
 }
-
-resource "aws_subnet" "web2" {
-  provider = aws.east
-  cidr_block = "172.20.20.0/24"
-  vpc_id = aws_vpc.tfvpc.id
-  availability_zone = var.az[1]
-
-  tags = {
-    name = "web1"
-  }
-}
-
 resource "aws_security_group" "awsfw" {
   provider = aws.east
-  name = "aws-fw"
-  vpc_id = aws_vpc.tfvpc.id
+  name     = "aws-fw"
+  vpc_id   = module.vpc.awsvpcid
+  tags = {
+    Name = "sg-terraform"
+  }
 
-   ingress {
-        from_port = 80
-        protocol = "tcp"
-        to_port = 80
-        cidr_blocks = ["0.0.0.0/0"]
+  dynamic "ingress" {
+    for_each = var.rules
+    content {
+      from_port   = ingress.value["from_port"]
+      to_port     = ingress.value["to_port"]
+      protocol    = ingress.value["protocol"]
+      cidr_blocks = ingress.value["cidr_blocks"]
     }
-    ingress {
-        from_port = 22
-        protocol = "tcp"
-        to_port = 22
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-
-
+  }
   egress {
     description = "allow_all"
-    from_port = 0
-    protocol = "-1"
-    to_port = 0
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_internet_gateway" "igw" {
+  provider = aws.east
+  vpc_id   = module.vpc.awsvpcid
+
+  tags = {
+    Name = "igw-terraform"
+  }
+}
+
+/* resource "aws_route_table" "table" {
+  vpc_id = "${aws_vpc.main.id}"
+ route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.gw.id}"
+  }
+  tags = {
+    Name = "MyRoute"
+  }
+} */
+
+resource "aws_route" "tfroute" {
+  provider               = aws.east
+  route_table_id         = module.vpc.awsvpc.main_route_table_id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.igw.id
 }
 
