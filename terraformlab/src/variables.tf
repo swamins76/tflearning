@@ -9,6 +9,14 @@ echo '<!doctype html><html><head><title>CONGRATULATIONS!!..You are on your way t
 echo "<BR><BR>Terraform autoscaled app multi-cloud lab<BR><BR>" >> /var/www/html/index.html
 EOF
 }
+variable "master-region" {
+  type    = string
+  default = "us-east-1"
+}
+variable "worker-region" {
+  type    = string
+  default = "us-west-1"
+}
 variable "aws_image" {
   description = "amazon linux image id for us-east"
   type        = string
@@ -23,6 +31,11 @@ variable "instance_type" {
   "t2.medium"]
   type = list(any)
 }
+
+variable "workers-count" {
+  type    = number
+  default = 1
+}
 variable "aws_launchcfg" {
   description = "aws launch config for the ASG"
   default     = "aws_autoscale_launch_config"
@@ -34,6 +47,29 @@ variable "az" {
   default = ["us-east-1b", "us-east-1c", "us-east-1d"]
 }
 
+variable "alb-rules" {
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = [
+    {
+      from_port   = 443
+      protocol    = "tcp"
+      to_port     = 443
+      cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      from_port   = 80
+      protocol    = "tcp"
+      to_port     = 80
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  ]
+}
+
 variable "rules" {
   type = list(object({
     from_port   = number
@@ -43,16 +79,39 @@ variable "rules" {
   }))
   default = [
     {
-      from_port   = 21
+      from_port   = 22
       protocol    = "tcp"
-      to_port     = 21
+      to_port     = 22
       cidr_blocks = ["0.0.0.0/0"]
     },
+    {
+      from_port   = 0
+      protocol    = -1
+      to_port     = 0
+      cidr_blocks = ["192.168.1.0/24"]
+    }
+  ]
+}
+
+variable "worker-rules" {
+  type = list(object({
+    from_port   = number
+    to_port     = number
+    protocol    = string
+    cidr_blocks = list(string)
+  }))
+  default = [
     {
       from_port   = 22
       protocol    = "tcp"
       to_port     = 22
       cidr_blocks = ["0.0.0.0/0"]
+    },
+    {
+      from_port   = 0
+      protocol    = -1
+      to_port     = 0
+      cidr_blocks = ["10.0.1.0/24"]
     }
   ]
 }

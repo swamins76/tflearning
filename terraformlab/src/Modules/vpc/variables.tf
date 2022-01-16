@@ -1,7 +1,8 @@
-variable "region" {
+variable "master-region" {
   type    = string
   default = "us-east-1"
 }
-variable "az" {
-  default = ["us-east-1b", "us-east-1c", "us-east-1d"]
+variable "worker-region" {
+  type    = string
+  default = "us-west-1"
 }
