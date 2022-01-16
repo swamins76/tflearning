@@ -8,10 +8,3 @@ provider "aws" {
   region = "us-west-1"
 
 }
-terraform {
-  backend "s3" {
-    region = "us-east-1"
-    key    = "terraform.tfstate"
-    bucket = "myterraform2022"
-  }
-}
