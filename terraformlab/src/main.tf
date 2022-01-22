@@ -1,6 +1,5 @@
 //aws compute configuraiton
 data "aws_ssm_parameter" "linuxAmimaster" {
-  provider = aws.master-region
   name     = "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
 }
 
@@ -11,7 +10,6 @@ data "aws_ssm_parameter" "linuxAmiworker" {
 
 # create a key pair for logging into ec2 in us east
 resource "aws_key_pair" "master-pub-key" {
-  provider   = aws.master-region
   key_name   = "jenkinLearning"
   public_key = file("~/.ssh/id_rsa.pub")
 }
@@ -52,10 +50,11 @@ resource "aws_launch_configuration" "tf-launch-config" {
 */
 //terraformlab\src\Modules\vpc
 module "vpc" {
-  source = "./Modules/vpc"
+  source    = "./Modules/vpc"
+  providers = { aws.worker = aws.worker-region }
 }
 resource "aws_instance" "tf-instance-master" {
-  provider                    = aws.master-region
+  #provider                    = aws.master-region
   ami                         = data.aws_ssm_parameter.linuxAmimaster.value
   instance_type               = var.instance_type[0]
   subnet_id                   = module.vpc.master_subnet_id_1
@@ -95,7 +94,7 @@ resource "aws_instance" "tf-instance-worker" {
 
 //security group for alb
 resource "aws_security_group" "alb_security_group" {
-  provider = aws.master-region
+  #provider = aws.master-region
   name     = "alb-master-sg"
   vpc_id   = module.vpc.master_vpc_id
   tags = {
@@ -121,7 +120,7 @@ resource "aws_security_group" "alb_security_group" {
 }
 //main security group
 resource "aws_security_group" "master_security_group" {
-  provider = aws.master-region
+  #provider = aws.master-region
   name     = "master-sg"
   vpc_id   = module.vpc.master_vpc_id
   tags = {
